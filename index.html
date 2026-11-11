@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cyber-Alerte au collège Turing — Escape game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Share+Tech+Mono&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070b18;--panel:#0f1730;--panel2:#16213f;--line:#2a3a68;--cyan:#22e4ff;--green:#3cff9a;--pink:#ff3d8b;--yellow:#ffd23f;--txt:#e8eeff;--mute:#93a3cc;}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--txt);font-family:Nunito,system-ui,sans-serif;font-size:16px}
+body{background:radial-gradient(1200px 600px at 50% -10%,#14234d 0%,var(--bg) 60%)}
+button{font:inherit;cursor:pointer;color:inherit}
+input,textarea{font:inherit}
+.mono{font-family:"Share Tech Mono",monospace}
+h1,h2,h3{font-family:Orbitron,sans-serif;letter-spacing:.04em;margin:.2em 0 .5em}
+.hidden{display:none!important}
+.btn{background:linear-gradient(180deg,#1d2c57,#142046);border:1px solid var(--line);border-radius:12px;padding:.7em 1.1em;font-weight:800;transition:.15s}
+.btn:hover{border-color:var(--cyan);box-shadow:0 0 12px #22e4ff55}
+.btn.primary{background:linear-gradient(180deg,#1ad7f2,#0b9fc0);color:#03121a;border-color:#7ff1ff}
+.btn.green{background:linear-gradient(180deg,#3cff9a,#18c46c);color:#032013;border-color:#9dffc9}
+.btn.pink{background:linear-gradient(180deg,#ff5a9c,#d81f68);color:#fff;border-color:#ff9dc3}
+.btn.small{padding:.45em .8em;font-size:.9em;border-radius:9px}
+.btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.field{width:100%;background:#0a1128;border:1px solid var(--line);border-radius:10px;color:var(--txt);padding:.7em .9em;font-size:1.05em}
+.field:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px #22e4ff33}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}
+
+/* START */
+#start .hero{text-align:center;padding:28px 10px 10px}
+#start h1{font-size:clamp(1.6rem,5vw,3rem);color:var(--cyan);text-shadow:0 0 18px #22e4ff88}
+.glitch{animation:gl 3s infinite}
+@keyframes gl{0%,92%,100%{transform:none}93%{transform:translate(2px,-1px);color:var(--pink)}95%{transform:translate(-2px,1px)}97%{transform:none;color:var(--cyan)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+.story{max-width:760px;margin:12px auto;line-height:1.55}
+.story .alert{border-left:4px solid var(--pink);background:#2a0f22;padding:12px 14px;border-radius:8px;margin-bottom:12px}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:14px 0}
+.rules div{background:var(--panel2);border-radius:12px;padding:10px;text-align:center;font-size:.92em}
+.rules b{display:block;font-size:1.5em}
+.startform{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.startform .field{flex:1 1 220px}
+.links{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px}
+
+/* HUD */
+.hud{position:sticky;top:0;z-index:20;background:#070b18ee;backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.hud .wrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px}
+.timer{font-family:"Share Tech Mono",monospace;font-size:1.9rem;color:var(--green);text-shadow:0 0 10px #3cff9a88;min-width:110px}
+.timer.warn{color:var(--yellow);text-shadow:0 0 10px #ffd23f88}
+.timer.danger{color:var(--pink);animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.45}}
+.team{color:var(--mute);font-size:.9em;flex:1;min-width:120px}
+.team b{color:var(--txt)}
+.frags{display:flex;gap:4px}
+.frag{width:28px;height:34px;border:1px solid var(--line);border-radius:6px;display:grid;place-items:center;font-family:Orbitron;font-weight:800;color:var(--mute);background:#0a1128;font-size:.95em;position:relative}
+.frag.ok{color:#03121a;background:var(--green);border-color:#9dffc9;box-shadow:0 0 10px #3cff9a77}
+.frag small{position:absolute;top:-2px;left:3px;font-size:.55em;font-family:Nunito}
+
+/* ROOM */
+.layout{display:grid;grid-template-columns:1fr 250px;gap:14px}
+@media (max-width:860px){.layout{grid-template-columns:1fr}}
+.room{position:relative;width:100%;aspect-ratio:16/10;border-radius:16px;overflow:hidden;border:1px solid var(--line);container-type:inline-size;
+ background:linear-gradient(180deg,#1b2650 0%,#141d3e 68%,#0c1129 68%,#0a0e22 100%)}
+.room::after{content:"";position:absolute;left:0;right:0;top:68%;bottom:0;background:repeating-linear-gradient(90deg,transparent 0 9%,#ffffff08 9% 9.3%),repeating-linear-gradient(0deg,transparent 0 22%,#ffffff06 22% 23%);pointer-events:none}
+.deco{position:absolute;pointer-events:none}
+.window{left:35%;top:6%;width:16%;height:24%;background:linear-gradient(180deg,#0a1336,#1a2c66);border:.5cqw solid #33447a;border-radius:4px}
+.window::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:.4cqw;background:#33447a}
+.window::after{content:"🌙";position:absolute;right:12%;top:8%;font-size:3cqw}
+.desktop{left:18%;top:60%;width:46%;height:7%;background:linear-gradient(180deg,#6b4c35,#4f3726);border-radius:6px 6px 0 0}
+.deskfront{left:20%;top:67%;width:42%;height:17%;background:linear-gradient(180deg,#4a3323,#38261a)}
+.shelf{left:53%;top:33%;width:14%;height:1.2%;background:#5c4330;border-radius:3px}
+.hs{position:absolute;background:none;border:2px solid transparent;border-radius:10px;padding:0;display:grid;place-items:center;transition:.15s;outline:none}
+.hs:hover,.hs:focus-visible{border-color:#22e4ffaa;box-shadow:0 0 16px #22e4ff66;background:#22e4ff12}
+.hs .emo{font-size:5.2cqw;line-height:1;filter:drop-shadow(0 4px 6px #0008)}
+.hs .lbl{position:absolute;bottom:-1.6cqw;left:50%;transform:translateX(-50%);white-space:nowrap;background:#000c;border:1px solid var(--cyan);color:var(--cyan);font-size:1.5cqw;padding:.2cqw .7cqw;border-radius:6px;opacity:0;transition:.2s;pointer-events:none;font-weight:700}
+.room.reveal .hs .lbl,.hs:hover .lbl{opacity:1}
+.room.reveal .hs{border-color:#ffd23f99;animation:pulse 1s infinite}
+@keyframes pulse{50%{box-shadow:0 0 18px #ffd23f88}}
+.hs .done{position:absolute;top:-1cqw;right:-1cqw;font-size:2.2cqw}
+.board{width:100%;height:100%;background:#f3f6fb;border:.6cqw solid #9aa6c3;border-radius:4px;color:#1b3a8a;font-family:"Share Tech Mono",monospace;font-size:1.6cqw;padding:1cqw;text-align:left;line-height:1.3;overflow:hidden}
+.board .r{color:#c0283f}
+.cabinet{width:100%;height:100%;background:linear-gradient(90deg,#4b5878,#5d6b8f 50%,#4b5878 50.5%,#56648a);border-radius:6px;border:.4cqw solid #36405c;position:relative}
+.cabinet .lock{position:absolute;left:50%;top:45%;transform:translate(-50%,-50%);font-size:3.4cqw}
+.rack{width:100%;height:100%;background:#151a28;border:.4cqw solid #2c3550;border-radius:5px;display:flex;flex-direction:column;gap:1cqw;padding:1cqw .8cqw}
+.rack i{display:block;height:2.6cqw;background:#222a40;border-radius:2px;position:relative}
+.rack i::after{content:"";position:absolute;right:.6cqw;top:50%;width:.8cqw;height:.8cqw;margin-top:-.4cqw;border-radius:50%;background:var(--pink);box-shadow:0 0 6px var(--pink);animation:blink .7s infinite}
+.rack i:nth-child(2n)::after{background:var(--green);box-shadow:0 0 6px var(--green);animation-duration:1.3s}
+.rack.ok i::after{background:var(--green);box-shadow:0 0 6px var(--green)}
+.drawer{width:100%;height:100%;background:#5a3f2b;border:.3cqw solid #2c1e14;border-radius:3px;display:grid;place-items:center}
+.drawer::after{content:"";width:30%;height:.8cqw;background:#c9b58a;border-radius:4px}
+
+.side{display:flex;flex-direction:column;gap:12px}
+.side h3{font-size:.85rem;color:var(--cyan);margin:0 0 8px}
+.inv{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media (max-width:860px){.inv{grid-template-columns:repeat(8,1fr)}}
+.slot{aspect-ratio:1;background:#0a1128;border:1px dashed var(--line);border-radius:10px;display:grid;place-items:center;font-size:1.6rem}
+.slot.full{border-style:solid;border-color:#3d5191;cursor:pointer}
+.slot.full:hover{border-color:var(--cyan)}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tip{font-size:.85em;color:var(--mute);line-height:1.4}
+
+/* MODAL */
+#modal{position:fixed;inset:0;z-index:50;background:#02040bcc;display:flex;align-items:center;justify-content:center;padding:14px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:18px;width:min(560px,100%);max-height:92vh;overflow:auto;padding:20px;position:relative;box-shadow:0 20px 60px #000a}
+.box.wide{width:min(900px,100%)}
+.box .x{position:absolute;right:10px;top:10px;background:#0a1128;border:1px solid var(--line);border-radius:50%;width:36px;height:36px}
+.box h2{font-size:1.15rem;color:var(--cyan);padding-right:40px}
+.box p{line-height:1.55}
+.note{background:#fff7c7;color:#3b3300;padding:14px;border-radius:6px;transform:rotate(-1.5deg);font-family:"Share Tech Mono",monospace;box-shadow:0 6px 20px #0006;margin:10px 0}
+.big{font-size:4rem;text-align:center;margin:6px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.shake{animation:shake .4s}
+@keyframes shake{25%{transform:translateX(-8px)}50%{transform:translateX(8px)}75%{transform:translateX(-5px)}}
+.lesson{background:linear-gradient(180deg,#0f2a26,#0d1f2a);border:1px solid #2d7a62;border-radius:14px;padding:14px;margin-top:12px}
+.lesson b{color:var(--green)}
+.fragbig{font-family:Orbitron;font-size:3rem;color:var(--green);text-align:center;text-shadow:0 0 18px #3cff9a}
+
+/* COMPUTER */
+.screen{background:linear-gradient(135deg,#0b1a3d,#1d0b33);border:8px solid #1c2338;border-radius:12px;min-height:380px;padding:14px;position:relative}
+.lockscr{text-align:center;padding:30px 10px}
+.avatar{width:80px;height:80px;border-radius:50%;background:#2a3a68;display:grid;place-items:center;font-size:2.4rem;margin:0 auto 10px}
+.icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px}
+.ico{background:#ffffff0d;border:1px solid #ffffff1a;border-radius:12px;padding:12px 6px;text-align:center;position:relative}
+.ico:hover{background:#22e4ff1f;border-color:var(--cyan)}
+.ico span{display:block;font-size:2.2rem}
+.ico small{display:block;font-weight:700;margin-top:4px}
+.ico .ck{position:absolute;top:4px;right:6px;font-size:1rem}
+.ransom{margin-top:14px;border:1px solid var(--pink);background:#2a0f22cc;border-radius:10px;padding:10px 12px;font-family:"Share Tech Mono",monospace;color:#ffb3cf;font-size:.92em}
+.winbar{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.mail{display:flex;gap:10px;align-items:center;background:#ffffff0b;border:1px solid #ffffff18;border-radius:10px;padding:10px;margin-bottom:6px;text-align:left;width:100%}
+.mail:hover{border-color:var(--cyan)}
+.mail .from{font-size:.8em;color:var(--mute);word-break:break-all}
+.mail.flag{border-color:var(--pink);background:#ff3d8b1c}
+.mailbody{background:#f4f6fb;color:#1a2033;border-radius:10px;padding:14px;line-height:1.5}
+.mailbody .hdr{font-size:.85em;color:#55607a;border-bottom:1px solid #d6dbe8;padding-bottom:8px;margin-bottom:8px;word-break:break-all}
+.cipher{font-family:"Share Tech Mono",monospace;background:#000a;border:1px solid var(--line);border-radius:10px;padding:12px;font-size:1.1em;letter-spacing:.06em;line-height:1.6;word-break:break-word}
+.cipher.dec{color:var(--green)}
+input[type=range]{width:100%;accent-color:var(--cyan)}
+.chk{list-style:none;padding:0;margin:10px 0}
+.chk li{padding:4px 0}
+.meter{height:10px;background:#0a1128;border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.meter i{display:block;height:100%;width:0;transition:.25s}
+.posts{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.post{background:#fff;color:#1b1f2e;border-radius:12px;padding:10px;text-align:left;border:3px solid transparent;min-height:96px}
+.post .em{font-size:1.8rem}
+.post.flag{border-color:var(--pink);background:#ffe3ee}
+.profile{display:flex;gap:12px;align-items:center;margin-bottom:12px}
+
+/* PUZZLES */
+.padlock{display:flex;gap:10px;justify-content:center;margin:16px 0}
+.wheel{display:flex;flex-direction:column;align-items:center;gap:4px}
+.wheel .d{width:56px;height:66px;display:grid;place-items:center;background:#0a1128;border:1px solid var(--line);border-radius:10px;font-family:"Share Tech Mono",monospace;font-size:2.2rem;color:var(--yellow)}
+.wheel button{width:56px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:4px 0}
+.leds{display:flex;flex-direction:column;gap:8px;align-items:center;background:#111827;border-radius:12px;padding:14px;margin:10px 0}
+.ledrow{display:flex;gap:10px;align-items:center}
+.ledrow span{width:64px;color:var(--mute);font-size:.85em}
+.led{width:26px;height:26px;border-radius:50%;background:#1f2a24;border:2px solid #2b3a31}
+.led.on{background:#3cff9a;box-shadow:0 0 12px #3cff9a;border-color:#b9ffd8}
+.qopt{display:block;width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:6px 0}
+.qopt.sel{border-color:var(--cyan);background:#22e4ff1f}
+.mlist .m{border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px;background:var(--panel2)}
+.mlist .m.ok{border-color:#2d7a62}
+.hint{background:#2b2511;border-left:3px solid var(--yellow);padding:8px 10px;border-radius:6px;margin:6px 0;font-size:.93em}
+
+/* END */
+#end .card{max-width:760px;margin:24px auto;text-align:center}
+.stars{font-size:2.6rem;letter-spacing:.2em}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.stats div{background:var(--panel2);border-radius:12px;padding:10px}
+.stats b{display:block;font-family:"Share Tech Mono";font-size:1.5rem;color:var(--cyan)}
+.reflexes{text-align:left;line-height:1.6}
+.reflexes li{margin:4px 0}
+
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#0f1730;border:1px solid var(--cyan);padding:10px 16px;border-radius:12px;z-index:80;box-shadow:0 8px 30px #000a;max-width:90vw;text-align:center;transition:opacity .3s}
+#pause{position:fixed;inset:0;z-index:60;background:#02040bf5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- ============ ÉCRAN D'ACCUEIL ============ -->
+<section id="start">
+ <div class="wrap">
+  <div class="hero">
+   <div style="font-size:3rem">🛡️💻</div>
+   <h1 class="glitch">CYBER-ALERTE</h1>
+   <div class="mono" style="color:var(--mute)">ESCAPE GAME · COLLÈGE ALAN TURING · 55 MIN</div>
+  </div>
+  <div class="card story">
+   <div class="alert mono">⚠️ ALERTE — Le réseau du collège a été piraté par un hacker nommé <b>SPECTRE</b>.</div>
+   <p>Il a verrouillé le serveur du collège : <b>dans 55 minutes, tous les bulletins et les devoirs seront effacés</b> !</p>
+   <p>Marc, l'administrateur réseau, est absent. Vous êtes enfermés dans sa salle informatique. Fouillez la salle, trouvez des objets, résolvez les énigmes et récupérez les <b>7 fragments de la clé</b> pour déverrouiller le serveur.</p>
+   <div class="rules">
+    <div><b>⏱️</b>55 minutes</div>
+    <div><b>🔍</b>Clique sur les objets de la salle</div>
+    <div><b>💡</b>Un indice = −1 minute</div>
+    <div><b>💾</b>Sauvegarde automatique</div>
+   </div>
+   <div id="resumeBox" class="hidden" style="margin-bottom:12px">
+    <button class="btn green" style="width:100%" onclick="resumeGame()">▶ Reprendre la partie de <span id="resumeName"></span> (<span id="resumeTime"></span>)</button>
+   </div>
+   <label for="teamName" class="tip">Nom de l'équipe ou prénoms</label>
+   <div class="startform">
+    <input id="teamName" class="field" maxlength="40" placeholder="Ex. : Les Pare-Feux">
+    <button class="btn primary" onclick="newGame()">🚀 Nouvelle partie</button>
+   </div>
+   <div class="links">
+    <button class="btn small" onclick="openSave(true)">🔑 Charger un code de sauvegarde</button>
+    <button class="btn small" onclick="openTeacher()">👩‍🏫 Espace enseignant</button>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- ============ JEU ============ -->
+<section id="game" class="hidden">
+ <div class="hud">
+  <div class="wrap">
+   <div id="timer" class="timer">55:00</div>
+   <div class="team">Équipe <b id="teamLbl"></b><br><span id="hintLbl">0 indice</span></div>
+   <div class="frags" id="frags"></div>
+  </div>
+ </div>
+ <div class="wrap">
+  <div class="layout">
+   <div>
+    <div class="room" id="room">
+     <div class="deco window"></div>
+     <div class="deco shelf"></div>
+     <div class="deco desktop"></div>
+     <div class="deco deskfront"></div>
+     <!-- objets cliquables -->
+     <button class="hs" style="left:3%;top:7%;width:27%;height:33%" onclick="act('tableau')" aria-label="Tableau blanc">
+      <div class="board">Table binaire :<br><span class="r">16 8 4 2 1</span><br>A=1 B=2 C=3 …<br>… Z=26<br><span class="r">SPECTRE 😈</span></div><span class="lbl">Tableau blanc</span></button>
+     <button class="hs" style="left:55%;top:19%;width:11%;height:15%" onclick="act('routeur')" aria-label="Routeur"><span class="emo">📡</span><span class="lbl">Routeur Wi-Fi</span><span class="done" data-done="e5"></span></button>
+     <button class="hs" style="left:68%;top:18%;width:10%;height:52%" onclick="act('serveur')" aria-label="Serveur"><div class="rack" id="rack"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="lbl">Serveur</span></button>
+     <button class="hs" style="left:81%;top:8%;width:16%;height:64%" onclick="act('armoire')" aria-label="Armoire"><div class="cabinet"><span class="lock" id="lockIco">🔒</span></div><span class="lbl">Armoire</span><span class="done" data-done="e3"></span></button>
+     <button class="hs" style="left:30%;top:35%;width:15%;height:26%" onclick="act('ordinateur')" aria-label="Ordinateur"><span class="emo" style="font-size:9cqw">🖥️</span><span class="lbl">Ordinateur</span><span class="done" data-done="e1"></span></button>
+     <button class="hs" style="left:20%;top:47%;width:8%;height:13%" onclick="act('cadre')" aria-label="Cadre photo"><span class="emo">🖼️</span><span class="lbl">Cadre photo</span></button>
+     <button class="hs" style="left:48%;top:50%;width:8%;height:10%" onclick="act('carte')" aria-label="Carte"><span class="emo" style="font-size:4cqw">💌</span><span class="lbl">Carte</span></button>
+     <button class="hs" style="left:23%;top:70%;width:14%;height:10%" onclick="act('tiroir')" aria-label="Tiroir"><div class="drawer"></div><span class="lbl">Tiroir</span></button>
+     <button class="hs" style="left:5%;top:70%;width:9%;height:18%" onclick="act('poubelle')" aria-label="Poubelle"><span class="emo">🗑️</span><span class="lbl">Poubelle</span></button>
+     <button class="hs" style="left:85%;top:73%;width:9%;height:20%" onclick="act('plante')" aria-label="Plante"><span class="emo">🪴</span><span class="lbl">Plante</span></button>
+    </div>
+    <p class="tip" style="margin-top:8px">🔍 Clique sur les éléments de la salle pour les examiner. Bloqués ? Ouvrez le <b>carnet de mission</b> pour obtenir un indice.</p>
+   </div>
+   <div class="side">
+    <div class="card" style="padding:14px">
+     <h3>🎒 INVENTAIRE</h3>
+     <div class="inv" id="inv"></div>
+    </div>
+    <div class="tools">
+     <button class="btn small" onclick="openMission()">📋 Mission & indices</button>
+     <button class="btn small" onclick="flashLamp()">🔦 Repérer</button>
+     <button class="btn small" onclick="openSave(false)">💾 Sauvegarde</button>
+     <button class="btn small" onclick="pauseGame()">⏸ Pause</button>
+    </div>
+    <div class="card tip" style="padding:12px">💾 La partie est sauvegardée automatiquement sur cet appareil. Pour continuer sur un autre ordinateur, notez votre <b>code de sauvegarde</b>.</div>
+   </div>
+  </div>
+ </div>
+</section>
+
+<!-- ============ FIN ============ -->
+<section id="end" class="hidden"><div class="wrap"><div class="card" id="endCard"></div></div></section>
+
+<div id="modal" class="hidden" onclick="if(event.target===this)closeModal()"><div class="box" id="box"></div></div>
+<div id="pause" class="hidden"><div style="font-size:3rem">⏸</div><h2>Pause</h2><p class="tip">Le chronomètre est arrêté.</p><button class="btn primary" onclick="resumeFromPause()">▶ Reprendre</button></div>
+<div id="toast" class="hidden"></div>
+
+<script>
+/* ================= DONNÉES DU JEU ================= */
+const DUR = 55*60, PEN = 60, KEY = 'cyberalerte-turing-v1', PROF = 'TURING55';
+const ORDER = ['e1','e2','e3','e4','e5','e6','e7'];
+const LETTERS = {e1:'P',e2:'A',e3:'R',e4:'E',e5:'F',e6:'E',e7:'U'};
+const TITLES = {
+ e1:"Accéder à l'ordinateur de l'administrateur",
+ e2:"Démasquer les mails piégés",
+ e3:"Ouvrir l'armoire verrouillée",
+ e4:"La clé USB mystérieuse",
+ e5:"Le message du routeur",
+ e6:"Créer un mot de passe incassable",
+ e7:"Protéger le profil de Lou",
+ fin:"Déverrouiller le serveur"
+};
+const HINTS = {
+ e1:["Marc a laissé un indice dans un endroit où l'on range ses affaires, sous son bureau.",
+     "Le post-it dit : prénom du chat + année de naissance. Cherche une photo et une carte sur le bureau.",
+     "Le chat s'appelle Félix et Marc est né en 1986. Mot de passe : Felix1986"],
+ e2:["Regarde très attentivement l'adresse de l'expéditeur de chaque mail.",
+     "Méfie-toi : urgence, cadeau trop beau, demande de mot de passe, adresse gmail pour un service officiel, faute dans le nom du site.",
+     "Les 3 mails frauduleux : « compte supprimé dans 24 h » (clg-turLng), « iPhone gagné », « mot de passe qui expire » (gmail)."],
+ e3:["Le fichier Spectre.txt de l'ordinateur est chiffré. Il te faut un outil… les gens jettent parfois des choses utiles !",
+     "Avec le disque de César, choisis le bon décalage : c'est le nombre de lettres du pseudo du hacker.",
+     "SPECTRE = 7 lettres → décalage 7. Le code de l'armoire est 7209."],
+ e4:["Une clé USB trouvée peut contenir un logiciel malveillant.",
+     "On ne branche jamais une clé inconnue. Un logiciel qui bloque tes fichiers et demande de l'argent est un « rançongiciel ».",
+     "Réponses : « La confier au responsable informatique sans la brancher » et « Un rançongiciel »."],
+ e5:["Le tableau blanc contient une table de conversion.",
+     "LED allumée = 1, LED éteinte = 0. Les colonnes valent 16, 8, 4, 2, 1. Additionne, puis A=1, B=2, C=3…",
+     "Ligne 1 = 16+4+2+1 = 23 = W, ligne 2 = 9 = I, ligne 3 = 6 = F, ligne 4 = 9 = I → WIFI"],
+ e6:["Lis bien chaque critère : ils doivent tous passer au vert.",
+     "Astuce : une phrase de passe, plusieurs mots séparés par un symbole + des chiffres.",
+     "Exemple qui marche : Chocolat-Velo-Lune-42!"],
+ e7:["Quelles informations permettraient à un inconnu de trouver Lou, de la contacter ou d'usurper son identité ?",
+     "Il y a exactement 4 publications dangereuses.",
+     "Dangereuses : l'adresse, la carte d'identité, la maison vide pendant les vacances, le numéro de téléphone."],
+ fin:["Les fragments de clé sont numérotés de 1 à 7 en haut de l'écran.",
+      "Lis les lettres dans l'ordre, de 1 à 7.",
+      "La clé est PAREFEU."]
+};
+const LESSONS = {
+ e1:"Un bon mot de passe ne contient <b>jamais d'informations personnelles</b> (prénom, animal, date de naissance) : elles se trouvent facilement, surtout sur les réseaux sociaux. Et on ne le note <b>jamais sur un post-it</b> !",
+ e2:"C'est de l'<b>hameçonnage</b> (phishing) : de faux messages qui imitent un vrai service pour voler tes identifiants ou ton argent. Vérifie l'expéditeur, ne clique pas sur les liens douteux, et <b>aucun service ne te demandera ton mot de passe par mail</b>.",
+ e3:"Le <b>chiffrement</b> rend un message illisible sans la clé. Le code de César (utilisé par Jules César il y a 2 000 ans) est trop simple aujourd'hui : on le casse en testant les 25 décalages. Les sites web utilisent des chiffrements bien plus robustes (le petit cadenas 🔒 dans le navigateur).",
+ e4:"Une clé USB abandonnée est un piège classique : la brancher peut installer un <b>rançongiciel</b> qui bloque tous les fichiers. On la remet à un adulte ou au responsable informatique, <b>sans la brancher</b>.",
+ e5:"Un ordinateur ne comprend que des <b>0 et des 1</b> : c'est le binaire. Côté sécurité, un Wi-Fi doit être protégé par un <b>mot de passe solide</b> ; méfie-toi des Wi-Fi publics gratuits pour te connecter à tes comptes.",
+ e6:"Un mot de passe solide : <b>au moins 12 caractères</b>, majuscules, minuscules, chiffres et symboles. Utilise <b>un mot de passe différent pour chaque compte</b> et active la <b>double authentification</b> quand c'est possible.",
+ e7:"Sur Internet, tout ce qu'on publie peut être vu, copié et conservé. Ne publie <b>jamais</b> ton adresse, ton téléphone, tes papiers d'identité ou tes absences. Mets tes comptes <b>en privé</b>. En cas de cyberharcèlement : appelle le <b>3018</b> (gratuit)."
+};
+const ITEMS = {
+ postit:{ico:'🟨',name:'Post-it',html:`<div class="note">Mon mot de passe ? Facile !<br>Le <b>prénom de mon chat</b> suivi de mon <b>année de naissance</b>.<br>Comme ça je ne l'oublie jamais 😎<br>— Marc</div>`},
+ photo:{ico:'🖼️',name:'Photo encadrée',html:`<div class="big">🐈</div><div class="note" style="text-align:center">« Félix, mon meilleur ami 🐾 »</div>`},
+ carte:{ico:'💌',name:"Carte d'anniversaire",html:`<div class="note">🎂 Joyeux anniversaire Marc !<br>40 ans déjà… Né le 14 mars <b>1986</b>, quelle époque !<br>— Toute l'équipe du collège Turing</div>`},
+ disque:{ico:'🧭',name:'Disque de César',html:`<div class="big">🧭</div><p>Deux roues de lettres superposées. En tournant la roue, on <b>décale</b> chaque lettre de l'alphabet. Parfait pour déchiffrer un message codé avec le <b>code de César</b> !</p><p class="tip">Il est maintenant utilisable dans le fichier chiffré de l'ordinateur.</p>`},
+ tableau:{ico:'📸',name:'Photo du tableau',html:`<div class="board" style="font-size:1.05rem;padding:16px;border-width:6px;border-radius:8px">
+ <b>Rappel : le binaire</b><br>Valeur des colonnes : <span class="r">16 &nbsp; 8 &nbsp; 4 &nbsp; 2 &nbsp; 1</span><br>Exemple : 0 0 1 0 1 = 4 + 1 = 5<br><br>
+ <b>Lettres → nombres</b><br>A=1 B=2 C=3 D=4 E=5 F=6 G=7 H=8 I=9 J=10 K=11 L=12 M=13 N=14 O=15 P=16 Q=17 R=18 S=19 T=20 U=21 V=22 W=23 X=24 Y=25 Z=26<br><br>
+ <span class="r">Mon chiffre préféré ? Celui de César ! 😈 — SPECTRE</span></div>`},
+ usb:{ico:'💾',name:'Clé USB « PHOTOS VACANCES »',html:`<div class="big">💾</div><p>Une clé USB étiquetée <b>« PHOTOS VACANCES »</b>. Elle n'appartient à personne de connu…</p>`}
+};
+const MAILS = [
+ {id:'m1',from:'Vie scolaire <vie-scolaire@clg-turing.fr>',sub:'Rappel : photos de classe jeudi',body:`Bonjour à tous,<br>Les photos de classe auront lieu jeudi matin dans le hall. Pensez à votre plus beau sourire !<br>La vie scolaire`},
+ {id:'m2',from:'Support ENT <support@clg-turlng.fr>',sub:'⚠️ URGENT : votre compte sera supprimé dans 24 h',body:`Cher utilisateur,<br>Suite à une erreur, votre compte ENT sera <b>SUPPRIMÉ DANS 24 HEURES</b>.<br>Pour l'éviter, confirmez immédiatement votre identifiant et votre mot de passe ici :<br><u style="color:#1a4fd6">http://clg-turlng.fr/connexion-securisee</u><br>Le service technique`},
+ {id:'m3',from:'Mme Dupont (EPS) <c.dupont@clg-turing.fr>',sub:'Cross du collège : pensez à vos baskets',body:`Bonjour,<br>Le cross aura lieu vendredi. N'oubliez pas vos baskets, une gourde et une tenue adaptée à la météo.<br>Sportivement, Mme Dupont`},
+ {id:'m4',from:'Service Cadeaux <gagnant@super-cadeaux-free.xyz>',sub:'🎉 Félicitations ! Vous avez gagné un smartphone',body:`BRAVO !!! Vous êtes notre <b>1 000 000e visiteur</b> 🎉🎉<br>Vous avez gagné le tout dernier smartphone !<br>Il suffit de payer <b>1 € de frais de port</b> en entrant les numéros de la carte bancaire de vos parents. Offre valable 10 minutes !!!`},
+ {id:'m5',from:'CDI <cdi@clg-turing.fr>',sub:'Nouveaux mangas au CDI',body:`Bonjour,<br>Le CDI vient de recevoir 15 nouveaux mangas et BD. Venez les emprunter à la récré !<br>La professeure documentaliste`},
+ {id:'m6',from:'Service Notes Collège <notes.college.turing2026@gmail.com>',sub:'Votre mot de passe expire aujourd\'hui',body:`Bonjour,<br>Votre mot de passe expire aujourd'hui. Pour ne pas perdre l'accès à vos notes, <b>répondez à ce mail</b> en indiquant votre identifiant et votre mot de passe actuel.<br>Merci de faire vite.`}
+];
+const PHISH = ['m2','m4','m6'];
+const POSTS = [
+ {em:'🤾',t:'Victoire 25 à 18 au match de hand ce week-end ! Trop fière de mon équipe 💪',bad:false},
+ {em:'🏠',t:"Trop hâte d'être rentrée chez moi au 8 rue des Lilas pour mon goûter 😍",bad:true},
+ {em:'🥞',t:'Recette de crêpes réussie du premier coup 😋',bad:false},
+ {em:'🪪',t:"Selfie avec ma carte d'identité pour l'inscription au club, je suis pas mal dessus non ?",bad:true},
+ {em:'🏖️',t:'Toute la famille part 3 semaines à la mer demain, la maison sera vide 😎',bad:true},
+ {em:'🎬',t:'Qui a vu le dernier film d\'animation au cinéma ? Il est génial !',bad:false},
+ {em:'📱',t:'Nouveau numéro ! Écrivez-moi au 06 12 34 56 78 😘',bad:true},
+ {em:'🌧️',t:'Encore de la pluie… vivement les vacances',bad:false}
+];
+const PLAIN = "SI TU LIS CECI, C'EST QUE TU ES MALIN. LE CADENAS DE L'ARMOIRE S'OUVRE AVEC LE CODE : SEPT - DEUX - ZERO - NEUF.";
+const BANNED = ['felix','1986','marc','turing','college','spectre','azerty','qwerty','password','motdepasse','123456','soleil','lou'];
+
+/* ================= ÉTAT & SAUVEGARDE ================= */
+let S = null, paused = false, tick = 0, tmp = {};
+function fresh(team){return {v:1,team,remaining:DUR,hints:{},hintsTotal:0,solved:{},inv:[],phish:[],social:[],timeUp:false,finished:false}}
+function save(){ if(!S) return; try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+function loadLocal(){ try{ const r = localStorage.getItem(KEY); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
+function enc(o){ return btoa(unescape(encodeURIComponent(JSON.stringify(o)))); }
+function dec(s){ return JSON.parse(decodeURIComponent(escape(atob(s.trim())))); }
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function norm(s){ return s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+function fmt(sec){ const n = Math.abs(sec); return (sec<0?'+':'') + String(Math.floor(n/60)).padStart(2,'0') + ':' + String(n%60).padStart(2,'0'); }
+function has(id){ return S.inv.includes(id); }
+
+/* ================= ÉCRANS ================= */
+function show(id){ ['start','game','end'].forEach(s => document.getElementById(s).classList.toggle('hidden', s!==id)); window.scrollTo(0,0); }
+function initStart(){
+ const sv = loadLocal();
+ const box = document.getElementById('resumeBox');
+ if(sv && !sv.finished){ box.classList.remove('hidden'); document.getElementById('resumeName').textContent = sv.team; document.getElementById('resumeTime').textContent = fmt(sv.remaining) + ' restantes'; }
+ else box.classList.add('hidden');
+ show('start');
+}
+function newGame(){
+ const name = document.getElementById('teamName').value.trim() || 'Agents secrets';
+ const sv = loadLocal();
+ if(sv && !sv.finished && !tmp.confirmNew){
+  tmp.confirmNew = true;
+  toast("⚠️ Une partie est en cours sur cet appareil. Clique à nouveau sur « Nouvelle partie » pour l'écraser.");
+  return;
+ }
+ tmp = {};
+ S = fresh(name); save(); startGame();
+ openModal(`<h2>🕵️ Mission lancée</h2><p>Bienvenue, équipe <b>${esc(S.team)}</b> !</p><p>La porte s'est refermée derrière vous. Sur le serveur, un message clignote :</p><div class="ransom">😈 VOS FICHIERS SONT À MOI. Trouvez la clé de 7 lettres avant la fin du compte à rebours… si vous en êtes capables. — SPECTRE</div><p>Fouillez la salle : <b>cliquez sur les objets</b>. Bonne chance !</p><div class="row"><button class="btn primary" onclick="closeModal()">C'est parti !</button></div>`);
+}
+function resumeGame(){ S = loadLocal(); if(!S) return initStart(); startGame(); toast('Partie reprise ! Bon retour 👋'); }
+function startGame(){ paused = false; show('game'); renderAll(); if(S.finished) showEnd(); }
+
+/* ================= RENDU ================= */
+function renderAll(){ renderTimer(); renderHUD(); renderInv(); renderRoom(); }
+function renderTimer(){
+ const t = document.getElementById('timer'); t.textContent = fmt(S.remaining);
+ t.className = 'timer' + (S.remaining <= 0 ? ' danger' : S.remaining <= 300 ? ' danger' : S.remaining <= 900 ? ' warn' : '');
+}
+function renderHUD(){
+ document.getElementById('teamLbl').textContent = S.team;
+ document.getElementById('hintLbl').textContent = S.hintsTotal + (S.hintsTotal > 1 ? ' indices utilisés' : ' indice utilisé');
+ document.getElementById('frags').innerHTML = ORDER.map((e,i) => `<div class="frag ${S.solved[e]?'ok':''}"><small>${i+1}</small>${S.solved[e]?LETTERS[e]:'?'}</div>`).join('');
+}
+function renderInv(){
+ const ids = S.inv; let h = '';
+ for(let i=0;i<8;i++){ const id = ids[i]; h += id ? `<div class="slot full" title="${esc(ITEMS[id].name)}" onclick="viewItem('${id}')">${ITEMS[id].ico}</div>` : `<div class="slot"></div>`; }
+ document.getElementById('inv').innerHTML = h;
+}
+function renderRoom(){
+ document.querySelectorAll('[data-done]').forEach(el => el.textContent = S.solved[el.dataset.done] ? '✅' : '');
+ document.getElementById('lockIco').textContent = S.solved.e3 ? '🔓' : '🔒';
+ document.getElementById('rack').classList.toggle('ok', !!S.finished);
+}
+function flashLamp(){ const r = document.getElementById('room'); r.classList.add('reveal'); setTimeout(()=>r.classList.remove('reveal'), 2500); }
+
+/* ================= CHRONO ================= */
+setInterval(() => {
+ if(!S || S.finished || paused || document.getElementById('game').classList.contains('hidden')) return;
+ S.remaining--;
+ if(S.remaining <= 0 && !S.timeUp){ S.timeUp = true; save(); timeUp(); }
+ renderTimer();
+ if(++tick % 5 === 0) save();
+}, 1000);
+document.addEventListener('visibilitychange', save);
+window.addEventListener('pagehide', save);
+function timeUp(){
+ openModal(`<h2>⏰ Temps écoulé !</h2><div class="big">😈</div><p>Le compte à rebours est terminé… SPECTRE a gagné cette manche.</p><p>Mais un vrai expert en cybersécurité n'abandonne jamais : vous pouvez <b>continuer la partie</b> pour terminer l'enquête. Le chronomètre compte maintenant le temps supplémentaire.</p><div class="row"><button class="btn primary" onclick="closeModal()">Continuer l'enquête</button></div>`);
+}
+function pauseGame(){ paused = true; save(); document.getElementById('pause').classList.remove('hidden'); }
+function resumeFromPause(){ paused = false; document.getElementById('pause').classList.add('hidden'); }
+
+/* ================= MODALE & TOAST ================= */
+function openModal(html, wide){ const b = document.getElementById('box'); b.className = 'box' + (wide?' wide':''); b.innerHTML = `<button class="x" onclick="closeModal()" aria-label="Fermer">✕</button>` + html; document.getElementById('modal').classList.remove('hidden'); b.scrollTop = 0; }
+function closeModal(){ document.getElementById('modal').classList.add('hidden'); }
+let toastT; function toast(m){ const t = document.getElementById('toast'); t.innerHTML = m; t.classList.remove('hidden'); clearTimeout(toastT); toastT = setTimeout(()=>t.classList.add('hidden'), 3200); }
+function shake(id){ const el = document.getElementById(id); if(!el) return; el.classList.remove('shake'); void el.offsetWidth; el.classList.add('shake'); }
+
+/* ================= OBJETS ================= */
+function give(id){ if(has(id)) return; S.inv.push(id); save(); renderInv(); toast(`🎒 Objet ajouté : <b>${esc(ITEMS[id].name)}</b>`); }
+function viewItem(id, intro){
+ let extra = '';
+ if(id==='usb' && !S.solved.e4) extra = `<div class="row"><button class="btn primary" onclick="usbQuiz()">Que faire de cette clé ?</button></div>`;
+ openModal(`<h2>${ITEMS[id].ico} ${esc(ITEMS[id].name)}</h2>${intro?`<p>${intro}</p>`:''}${ITEMS[id].html}${extra}`);
+}
+function act(id){
+ switch(id){
+  case 'tiroir': { const n = !has('postit'); give('postit'); viewItem('postit', n ? "Tu ouvres le tiroir du bureau… un post-it est collé tout au fond !" : "Le tiroir est vide, à part ce post-it."); break; }
+  case 'cadre': give('photo'); viewItem('photo', "Une photo encadrée trône sur le bureau."); break;
+  case 'carte': give('carte'); viewItem('carte', "Une carte est posée près de l'ordinateur."); break;
+  case 'poubelle': { const n = !has('disque'); give('disque'); viewItem('disque', n ? "Sous des papiers froissés, au fond de la poubelle… un objet étrange !" : "Il n'y a plus rien d'intéressant dans la poubelle."); break; }
+  case 'tableau': give('tableau'); viewItem('tableau', "Tu prends le tableau en photo pour l'avoir toujours sous la main."); break;
+  case 'plante': openModal(`<h2>🪴 Une plante verte</h2><p>Tu fouilles la terre… rien. Juste une plante qui aurait bien besoin d'eau. 🌱</p>`); break;
+  case 'ordinateur': openComputer('home'); break;
+  case 'armoire': armoire(); break;
+  case 'routeur': routeur(); break;
+  case 'serveur': serveur(); break;
+ }
+}
+
+/* ================= RÉSOLUTION ================= */
+function solve(id){
+ if(S.solved[id]) return;
+ S.solved[id] = true; save(); renderHUD(); renderRoom();
+ const n = ORDER.indexOf(id) + 1;
+ const all = ORDER.every(e => S.solved[e]);
+ openModal(`<h2>✅ Énigme résolue !</h2><p>${esc(TITLES[id])}</p><p style="text-align:center;margin:0">Fragment de clé n°${n} récupéré :</p><div class="fragbig">${LETTERS[id]}</div><div class="lesson">🔐 <b>Le savais-tu ?</b><br>${LESSONS[id]}</div>${all?`<p style="color:var(--green)"><b>Tous les fragments sont réunis ! Vite, au serveur !</b></p>`:''}<div class="row"><button class="btn primary" onclick="closeModal()">Continuer</button></div>`);
+}
+
+/* ---------- ORDINATEUR ---------- */
+function openComputer(view){
+ if(!S.solved.e1) return lockScreen();
+ const back = `<div class="winbar"><button class="btn small" onclick="openComputer('home')">← Bureau</button></div>`;
+ if(view==='home'){
+  const ic = (v,e,emo,l) => `<button class="ico" onclick="openComputer('${v}')"><span>${emo}</span><small>${l}</small>${e&&S.solved[e]?'<b class="ck">✅</b>':''}</button>`;
+  openModal(`<h2>🖥️ Session de Marc — Administrateur</h2><div class="screen"><div class="icons">${ic('mail','e2','📧','Messagerie')}${ic('cesar','e3','📄','Spectre.txt')}${ic('pass','e6','🔑','Sécurité')}${ic('social','e7','👥','Réseau social')}</div><div class="ransom">😈 SPECTRE : « J'ai laissé un fichier pour les plus malins… mais il est chiffré ! »</div></div>`, true);
+ }
+ else if(view==='mail') mailView(back);
+ else if(view==='cesar') cesarView(back);
+ else if(view==='pass') passView(back);
+ else if(view==='social') socialView(back);
+}
+function lockScreen(){
+ openModal(`<h2>🖥️ Ordinateur de l'administrateur</h2><div class="screen"><div class="lockscr"><div class="avatar">👨‍💻</div><b>Marc D.</b><div class="tip">Administrateur réseau</div><div style="max-width:300px;margin:16px auto" id="lockForm"><input id="pw1" class="field mono" type="text" autocomplete="off" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')tryPw1()"><div class="row" style="justify-content:center"><button class="btn primary" onclick="tryPw1()">🔓 Se connecter</button></div><p class="tip" id="pw1msg"></p></div></div></div>`, true);
+ setTimeout(()=>{ const i = document.getElementById('pw1'); if(i) i.focus(); }, 50);
+}
+function tryPw1(){
+ const v = norm(document.getElementById('pw1').value);
+ if(v==='felix1986'){ solve('e1'); }
+ else { shake('lockForm'); document.getElementById('pw1msg').textContent = v.includes('felix') ? "Presque ! Il manque quelque chose…" : "❌ Mot de passe incorrect."; }
+}
+
+/* ---------- PHISHING ---------- */
+function mailView(back, openId){
+ let h = back + `<h3 style="font-size:1rem">📧 Boîte de réception</h3><p class="tip">Spectre a glissé de faux mails dans la boîte. Ouvre chaque mail et <b>signale les mails frauduleux</b> 🚩, puis valide.</p>`;
+ if(openId){
+  const m = MAILS.find(x=>x.id===openId); const f = S.phish.includes(m.id);
+  h += `<div class="mailbody"><div class="hdr"><b>De :</b> ${esc(m.from)}<br><b>Objet :</b> ${esc(m.sub)}</div>${m.body}</div><div class="row"><button class="btn small" onclick="mailView(BACK)">← Liste</button>${S.solved.e2?'':`<button class="btn small ${f?'':'pink'}" onclick="toggleFlag('${m.id}')">${f?'Retirer le signalement':'🚩 Signaler comme frauduleux'}</button>`}</div>`;
+ } else {
+  h += MAILS.map(m => `<button class="mail ${S.phish.includes(m.id)?'flag':''}" onclick="mailView(BACK,'${m.id}')"><span style="font-size:1.4rem">${S.phish.includes(m.id)?'🚩':'✉️'}</span><span><b>${esc(m.sub)}</b><div class="from">${esc(m.from)}</div></span></button>`).join('');
+  h += S.solved.e2 ? `<p style="color:var(--green)">✅ Boîte sécurisée !</p>` : `<div class="row"><button class="btn green" onclick="checkPhish()">Valider mes signalements</button><span class="tip" id="phmsg"></span></div>`;
+ }
+ openModal(h, true);
+}
+const BACK = `<div class="winbar"><button class="btn small" onclick="openComputer('home')">← Bureau</button></div>`;
+function toggleFlag(id){ const i = S.phish.indexOf(id); if(i>=0) S.phish.splice(i,1); else S.phish.push(id); save(); mailView(BACK, id); }
+function checkPhish(){
+ const wrong = MAILS.filter(m => PHISH.includes(m.id) !== S.phish.includes(m.id)).length;
+ if(wrong===0) solve('e2');
+ else { document.getElementById('phmsg').textContent = `❌ ${wrong} mail${wrong>1?'s sont mal classés':' est mal classé'}. Regarde bien les expéditeurs !`; }
+}
+
+/* ---------- CÉSAR ---------- */
+function caesar(str,k){ return str.replace(/[A-Z]/g, c => String.fromCharCode(((c.charCodeAt(0)-65+k)%26+26)%26+65)); }
+const CIPHER = caesar(PLAIN, 7);
+function cesarView(back){
+ let h = back + `<h3 style="font-size:1rem">📄 Spectre.txt</h3><p class="tip">De : SPECTRE 😈 — « La clé ? C'est le <b>nombre de lettres de mon nom</b>. »</p><div class="cipher">${CIPHER}</div>`;
+ if(!has('disque')){
+  h += `<p>🔒 Ce texte est chiffré… Il te faudrait un <b>outil de déchiffrement</b>. Fouille la salle !</p>`;
+ } else {
+  h += `<div style="margin-top:14px"><b>🧭 Disque de César</b> — Décalage : <span id="shv" class="mono" style="color:var(--yellow);font-size:1.3em">0</span><input type="range" min="0" max="25" value="${tmp.shift||0}" oninput="shiftCesar(this.value)"></div><p class="tip">Texte déchiffré :</p><div class="cipher dec" id="decTxt"></div><p class="tip">Quand le message est lisible, utilise l'information dans la salle !</p>`;
+ }
+ openModal(h, true);
+ if(has('disque')) shiftCesar(tmp.shift||0);
+}
+function shiftCesar(v){ tmp.shift = +v; document.getElementById('shv').textContent = v; document.getElementById('decTxt').textContent = caesar(CIPHER, -v); }
+
+/* ---------- ARMOIRE ---------- */
+function armoire(){
+ if(!S.solved.e3){
+  tmp.code = tmp.code || [0,0,0,0];
+  const w = tmp.code.map((d,i) => `<div class="wheel"><button onclick="wheel(${i},1)">▲</button><div class="d" id="d${i}">${d}</div><button onclick="wheel(${i},-1)">▼</button></div>`).join('');
+  openModal(`<h2>🔒 Armoire verrouillée</h2><p>Un cadenas à <b>4 chiffres</b> bloque l'armoire.</p><div class="padlock" id="pad">${w}</div><div class="row" style="justify-content:center"><button class="btn primary" onclick="tryCode()">Ouvrir</button></div>`);
+ } else {
+  if(!has('usb')){ give('usb'); viewItem('usb', "L'armoire est ouverte ! À l'intérieur, sur une étagère, tu trouves…"); }
+  else if(!S.solved.e4) viewItem('usb', "La clé USB est dans ton inventaire.");
+  else openModal(`<h2>🔓 Armoire</h2><p>L'armoire est vide maintenant : seulement des câbles et des vieux claviers.</p>`);
+ }
+}
+function wheel(i,d){ tmp.code[i] = (tmp.code[i]+d+10)%10; document.getElementById('d'+i).textContent = tmp.code[i]; }
+function tryCode(){
+ if(tmp.code.join('')==='7209'){ solve('e3'); }
+ else { shake('pad'); toast('❌ Le cadenas ne s\'ouvre pas.'); }
+}
+
+/* ---------- CLÉ USB ---------- */
+const QUIZ = [
+ {q:"Tu trouves cette clé USB inconnue. Que fais-tu ?",o:["Je la branche sur l'ordinateur pour voir à qui elle appartient","Je la branche sur l'ordinateur du prof, il a un antivirus","Je la confie au responsable informatique sans la brancher","Je la garde, une clé gratuite c'est toujours utile"],a:2},
+ {q:"Un logiciel qui bloque tous tes fichiers et demande de l'argent pour les récupérer s'appelle…",o:["Un pare-feu","Un rançongiciel","Un navigateur","Un antivirus"],a:1}
+];
+function usbQuiz(){
+ tmp.qa = tmp.qa || [null,null];
+ const h = QUIZ.map((q,qi) => `<p><b>${qi+1}. ${q.q}</b></p>` + q.o.map((o,oi)=>`<button class="qopt ${tmp.qa[qi]===oi?'sel':''}" onclick="pickQ(${qi},${oi})">${o}</button>`).join('')).join('');
+ openModal(`<h2>💾 La clé USB mystérieuse</h2><div id="quiz">${h}</div><div class="row"><button class="btn green" onclick="checkQuiz()">Valider</button><span class="tip" id="qmsg"></span></div>`);
+}
+function pickQ(q,o){ tmp.qa[q] = o; usbQuiz(); }
+function checkQuiz(){
+ if(tmp.qa[0]===QUIZ[0].a && tmp.qa[1]===QUIZ[1].a) solve('e4');
+ else { shake('quiz'); document.getElementById('qmsg').textContent = '❌ Au moins une réponse est fausse. Réfléchis encore !'; }
+}
+
+/* ---------- ROUTEUR BINAIRE ---------- */
+function routeur(){
+ const rows = ['10111','01001','00110','01001'];
+ const leds = rows.map((r,i)=>`<div class="ledrow"><span>Ligne ${i+1}</span>${[...r].map(b=>`<div class="led ${b==='1'?'on':''}"></div>`).join('')}</div>`).join('');
+ openModal(`<h2>📡 Routeur Wi-Fi</h2><p>Le routeur clignote bizarrement. Une étiquette dit : <i>« Le mot de passe Wi-Fi est caché dans les lumières. »</i></p><div class="leds">${leds}</div>${S.solved.e5?`<p style="color:var(--green)">✅ Mot trouvé : WIFI</p>`:`<div id="rtf"><input id="rt" class="field mono" maxlength="8" placeholder="Mot de 4 lettres" autocomplete="off" onkeydown="if(event.key==='Enter')tryRouter()"><div class="row"><button class="btn primary" onclick="tryRouter()">Valider</button><span class="tip" id="rtmsg"></span></div></div>`}`);
+}
+function tryRouter(){
+ const v = norm(document.getElementById('rt').value);
+ if(v==='wifi') solve('e5');
+ else { shake('rtf'); document.getElementById('rtmsg').textContent = '❌ Ce n\'est pas le bon mot.'; }
+}
+
+/* ---------- MOT DE PASSE FORT ---------- */
+function passView(back){
+ if(S.solved.e6){ openModal(back + `<h3 style="font-size:1rem">🔑 Sécurité</h3><p style="color:var(--green)">✅ Le nouveau mot de passe administrateur est en place. Spectre ne pourra plus le deviner !</p>`, true); return; }
+ openModal(back + `<h3 style="font-size:1rem">🔑 Sécurité du compte</h3><p>Spectre connaît l'ancien mot de passe <span class="mono">Felix1986</span>. Crée un <b>nouveau mot de passe incassable</b> pour Marc.</p><p class="tip">⚠️ N'écris jamais ici un mot de passe que tu utilises vraiment !</p><input id="np" class="field mono" autocomplete="off" placeholder="Nouveau mot de passe" oninput="checkPass()"><div class="meter" style="margin-top:8px"><i id="pm"></i></div><ul class="chk" id="pc"></ul><button class="btn green" id="pbtn" disabled onclick="solve('e6')">Enregistrer le mot de passe</button>`, true);
+ checkPass();
+}
+function checkPass(){
+ const v = document.getElementById('np').value, n = norm(v);
+ const c = [
+  [v.length>=12,'Au moins 12 caractères'],
+  [/[A-Z]/.test(v),'Au moins une majuscule'],
+  [/[a-z]/.test(v),'Au moins une minuscule'],
+  [/[0-9]/.test(v),'Au moins un chiffre'],
+  [/[^A-Za-z0-9]/.test(v),'Au moins un caractère spécial ( ! ? # - @ …)'],
+  [v.length>0 && !BANNED.some(b=>n.includes(b)),'Aucune info personnelle ni mot trop courant (felix, 1986, azerty, 123456…)']
+ ];
+ const ok = c.filter(x=>x[0]).length;
+ document.getElementById('pc').innerHTML = c.map(x=>`<li>${x[0]?'✅':'⬜'} ${x[1]}</li>`).join('');
+ const m = document.getElementById('pm'); m.style.width = (ok/6*100)+'%'; m.style.background = ok<3?'var(--pink)':ok<6?'var(--yellow)':'var(--green)';
+ document.getElementById('pbtn').disabled = ok<6;
+}
+
+/* ---------- RÉSEAU SOCIAL ---------- */
+function socialView(back){
+ const p = POSTS.map((x,i)=>`<button class="post ${S.social.includes(i)?'flag':''}" ${S.solved.e7?'disabled':''} onclick="toggleSocial(${i})"><div class="em">${x.em} ${S.social.includes(i)?'🚩':''}</div>${esc(x.t)}</button>`).join('');
+ openModal(back + `<h3 style="font-size:1rem">👥 Réseau social — profil PUBLIC</h3><div class="profile"><div class="avatar" style="margin:0;width:56px;height:56px;font-size:1.6rem">👧</div><div><b>Lou_Turing</b><div class="tip">Élève de 5e · 1 248 abonnés (dont beaucoup d'inconnus…)</div></div></div><p class="tip">Spectre espionne le profil de Lou pour trouver des informations. <b>Signale 🚩 les publications dangereuses</b> à supprimer, puis valide.</p><div class="posts" id="posts">${p}</div>${S.solved.e7?`<p style="color:var(--green)">✅ Profil sécurisé et passé en privé !</p>`:`<div class="row"><button class="btn green" onclick="checkSocial()">Valider</button><span class="tip" id="somsg"></span></div>`}`, true);
+}
+function toggleSocial(i){ const k = S.social.indexOf(i); if(k>=0) S.social.splice(k,1); else S.social.push(i); save(); socialView(BACK); }
+function checkSocial(){
+ const wrong = POSTS.filter((x,i)=> x.bad !== S.social.includes(i)).length;
+ if(wrong===0) solve('e7');
+ else { shake('posts'); document.getElementById('somsg').textContent = `❌ ${wrong} publication${wrong>1?'s sont mal classées':' est mal classée'}.`; }
+}
+
+/* ---------- SERVEUR / FINAL ---------- */
+function serveur(){
+ const n = ORDER.filter(e=>S.solved[e]).length;
+ const slots = ORDER.map((e,i)=>`<div class="frag ${S.solved[e]?'ok':''}" style="width:40px;height:48px;font-size:1.3rem"><small>${i+1}</small>${S.solved[e]?LETTERS[e]:'?'}</div>`).join('');
+ let h = `<h2>🗄️ Serveur du collège</h2><div class="ransom">😈 ACCÈS BLOQUÉ PAR SPECTRE<br>Entrez la clé de déchiffrement (7 lettres)…</div><div class="frags" style="justify-content:center;margin:16px 0">${slots}</div>`;
+ if(n<7) h += `<p>Il te manque encore <b>${7-n} fragment${7-n>1?'s':''}</b> de la clé. Continue à fouiller la salle et l'ordinateur !</p>`;
+ else h += `<div id="ff"><input id="fk" class="field mono" maxlength="12" placeholder="CLÉ" style="text-align:center;font-size:1.5rem;letter-spacing:.3em" autocomplete="off" onkeydown="if(event.key==='Enter')tryFinal()"><div class="row" style="justify-content:center"><button class="btn green" onclick="tryFinal()">🔓 Déchiffrer le serveur</button></div><p class="tip" id="fmsg" style="text-align:center"></p></div>`;
+ openModal(h);
+}
+function tryFinal(){
+ if(norm(document.getElementById('fk').value)==='parefeu'){
+  S.finished = true; S.endRemaining = S.remaining; save(); renderRoom(); closeModal(); showEnd();
+ } else { shake('ff'); document.getElementById('fmsg').textContent = '❌ Clé refusée. Remets les fragments dans l\'ordre !'; }
+}
+function showEnd(){
+ const used = DUR - S.endRemaining;
+ const win = S.endRemaining > 0;
+ const stars = !win ? 1 : S.hintsTotal<=3 ? 3 : S.hintsTotal<=7 ? 2 : 1;
+ document.getElementById('endCard').innerHTML = `
+  <div style="font-size:3rem">${win?'🏆':'🛡️'}</div>
+  <h1 style="color:${win?'var(--green)':'var(--yellow)'}">${win?'MISSION RÉUSSIE !':'MISSION TERMINÉE'}</h1>
+  <p>Équipe <b>${esc(S.team)}</b> — le mot de passe était <b class="mono" style="color:var(--green)">PAREFEU</b> : un pare-feu filtre ce qui entre et sort d'un réseau pour le protéger.</p>
+  <p>${win?'Le serveur est déchiffré, les bulletins sont sauvés et Spectre est démasqué ! 🎉':'Le serveur est déchiffré, mais un peu tard… Spectre a eu le temps de faire des dégâts. La prochaine fois sera la bonne !'}</p>
+  <div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
+  <div class="stats"><div><b>${fmt(used)}</b>Temps total</div><div><b>${S.hintsTotal}</b>Indices</div><div><b>${win?fmt(S.endRemaining):'00:00'}</b>Temps restant</div></div>
+  <div class="lesson reflexes"><b>🔐 Les 7 réflexes cyber à retenir</b><ol>
+   <li>Pas d'infos personnelles dans un mot de passe, et jamais sur un post-it.</li>
+   <li>Vérifier l'expéditeur : aucun service ne demande ton mot de passe par mail.</li>
+   <li>Le chiffrement protège les messages (cherche le cadenas 🔒 du navigateur).</li>
+   <li>Ne jamais brancher une clé USB inconnue.</li>
+   <li>Protéger son Wi-Fi et se méfier des Wi-Fi publics.</li>
+   <li>12 caractères minimum, un mot de passe différent par compte, double authentification.</li>
+   <li>Ne pas publier son adresse, son téléphone, ses papiers ni ses absences. Compte en privé.</li>
+  </ol><p class="tip" style="margin:0">Besoin d'aide ? <b>3018</b> (cyberharcèlement, gratuit) · cybermalveillance.gouv.fr</p></div>
+  <div class="row" style="justify-content:center"><button class="btn primary" onclick="restart()">🔄 Nouvelle partie</button></div>`;
+ show('end');
+}
+function restart(){ try{ localStorage.removeItem(KEY); }catch(e){} S = null; tmp = {}; document.getElementById('teamName').value=''; initStart(); }
+
+/* ================= MISSION & INDICES ================= */
+function openMission(){
+ const ids = [...ORDER,'fin'];
+ const h = ids.map(id => {
+  const ok = id==='fin' ? S.finished : S.solved[id];
+  const n = S.hints[id]||0;
+  const shown = HINTS[id].slice(0,n).map((t,i)=>`<div class="hint">💡 Indice ${i+1} : ${t}</div>`).join('');
+  const btn = ok ? '' : n<3 ? `<button class="btn small" onclick="useHint('${id}')">💡 Indice ${n+1}/3 (−1 min)</button>` : '';
+  return `<div class="m ${ok?'ok':''}"><b>${ok?'✅':'⬜'} ${id==='fin'?'Final':'Fragment '+(ORDER.indexOf(id)+1)} — ${TITLES[id]}</b>${shown}${btn?`<div style="margin-top:6px">${btn}</div>`:''}</div>`;
+ }).join('');
+ openModal(`<h2>📋 Carnet de mission</h2><p class="tip">Chaque nouvel indice retire <b>1 minute</b> au chronomètre. Les indices déjà débloqués restent gratuits.</p><div class="mlist">${h}</div>`, true);
+}
+function useHint(id){
+ S.hints[id] = (S.hints[id]||0)+1; S.hintsTotal++; S.remaining -= PEN;
+ if(S.remaining<=0 && !S.timeUp){ S.timeUp = true; }
+ save(); renderTimer(); renderHUD(); openMission(); toast('💡 Indice débloqué : −1 minute');
+}
+
+/* ================= SAUVEGARDE MANUELLE ================= */
+function openSave(fromStart){
+ const code = (!fromStart && S) ? enc(S) : '';
+ openModal(`<h2>💾 Sauvegarde</h2>
+  ${code?`<p>La partie est enregistrée <b>automatiquement</b> sur cet appareil. Pour la reprendre sur un <b>autre ordinateur</b>, copiez ce code :</p><textarea class="field mono" id="codeOut" rows="4" readonly onclick="this.select()">${code}</textarea><div class="row"><button class="btn small primary" onclick="copyCode()">📋 Copier le code</button><span class="tip" id="cpmsg"></span></div><hr style="border-color:var(--line);margin:18px 0">`:''}
+  <p><b>Charger une partie</b> : collez un code de sauvegarde.</p>
+  <textarea class="field mono" id="codeIn" rows="3" placeholder="Collez le code ici"></textarea>
+  <div class="row"><button class="btn small green" onclick="loadCode()">Charger</button><span class="tip" id="ldmsg"></span></div>`);
+}
+function copyCode(){
+ const t = document.getElementById('codeOut'); t.select();
+ const done = () => document.getElementById('cpmsg').textContent = '✅ Copié !';
+ try{ navigator.clipboard.writeText(t.value).then(done).catch(()=>{ try{document.execCommand('copy'); done();}catch(e){ document.getElementById('cpmsg').textContent='Sélectionne le texte et copie-le manuellement.'; } }); }
+ catch(e){ document.getElementById('cpmsg').textContent='Sélectionne le texte et copie-le manuellement.'; }
+}
+function loadCode(){
+ try{
+  const o = dec(document.getElementById('codeIn').value);
+  if(!o || o.v!==1 || typeof o.remaining!=='number') throw 0;
+  S = Object.assign(fresh(o.team||'Équipe'), o); tmp = {}; save(); closeModal(); startGame(); toast('✅ Partie chargée !');
+ }catch(e){ document.getElementById('ldmsg').textContent = '❌ Code invalide.'; }
+}
+
+/* ================= ESPACE ENSEIGNANT ================= */
+function openTeacher(){
+ openModal(`<h2>👩‍🏫 Espace enseignant</h2><p>Entrez le code enseignant pour afficher les solutions.</p><div id="tf"><input id="tc" class="field mono" type="password" placeholder="Code" onkeydown="if(event.key==='Enter')teacher()"><div class="row"><button class="btn primary" onclick="teacher()">Valider</button></div></div>`);
+}
+function teacher(){
+ if(document.getElementById('tc').value.trim().toUpperCase()!==PROF){ shake('tf'); return; }
+ openModal(`<h2>👩‍🏫 Solutions</h2><div class="mlist">
+  <div class="m"><b>1 · P — Ordinateur</b><br>Tiroir (post-it) + cadre (chat Félix) + carte (né en 1986) → <span class="mono">Felix1986</span></div>
+  <div class="m"><b>2 · A — Messagerie</b><br>Mails frauduleux : « compte supprimé dans 24 h » (clg-turLng.fr), « smartphone gagné », « mot de passe expire » (gmail).</div>
+  <div class="m"><b>3 · R — Armoire</b><br>Poubelle → disque de César. Spectre.txt, décalage 7 (SPECTRE) → code <span class="mono">7209</span></div>
+  <div class="m"><b>4 · E — Clé USB</b> (dans l'armoire)<br>Q1 : la confier au responsable sans la brancher · Q2 : un rançongiciel</div>
+  <div class="m"><b>5 · F — Routeur</b><br>10111=23=W · 01001=9=I · 00110=6=F · 01001=9=I → <span class="mono">WIFI</span></div>
+  <div class="m"><b>6 · E — Sécurité</b><br>Tout mot de passe validant les 6 critères (ex. Chocolat-Velo-Lune-42!)</div>
+  <div class="m"><b>7 · U — Réseau social</b><br>Posts dangereux : adresse, carte d'identité, maison vide, numéro de téléphone.</div>
+  <div class="m"><b>Final — Serveur</b><br><span class="mono">PAREFEU</span></div></div>
+  <p class="tip">Chaque indice retire 1 min. Le chrono tourne tant que la page de jeu est ouverte ; il s'arrête avec ⏸ ou quand on ferme la page (la partie reprend au même temps).</p>
+  <div class="row"><button class="btn small pink" onclick="restart();closeModal();toast('Partie de cet appareil effacée.')">🗑 Effacer la partie enregistrée sur cet appareil</button></div>`, true);
+}
+
+initStart();
+</script>
+</body>
+</html>
